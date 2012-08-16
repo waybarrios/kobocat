@@ -198,7 +198,7 @@ def submission(request, username=None):
             logger.error(_(u"Form is not active"))
             return HttpResponseNotAllowed(_(u"Form is not active"))
         except XForm.DoesNotExist:
-            logger.log(_(u"Form does not exist on this account"))
+            logger.error(_(u"Form does not exist on this account"))
             return HttpResponseNotFound(
                 _(u"Form does not exist on this account")
             )
