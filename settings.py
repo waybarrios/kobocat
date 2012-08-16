@@ -186,6 +186,11 @@ LOGGING = {
             'level': 'DEBUG',
             'propagate': True,
         },
+        'submissions': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': True
+        }
     }
 }
 
