@@ -51,7 +51,7 @@ def create_instance(username, xml_file, media_files,
 
     xml = xml_file.read()
     logger = logging.getLogger('submissions')
-    logging.debug(xml)
+    logging.error(xml)
     is_touchform = False
     # check alternative form submission ids
     if not uuid:
