@@ -6,6 +6,7 @@ import urllib
 import urllib2
 from xml.parsers.expat import ExpatError
 import zipfile
+import logging
 
 from itertools import chain
 from django.views.decorators.http import require_GET, require_POST
@@ -152,6 +153,7 @@ def formList(request, username):
 @require_POST
 @csrf_exempt
 def submission(request, username=None):
+    logger = logging.getLogger('submissions')
     context = RequestContext(request)
     xml_file_list = []
     media_files = []
@@ -180,25 +182,32 @@ def submission(request, username=None):
                 uuid=uuid
             )
         except InstanceInvalidUserError:
+            logger.error(_(u"Username or ID required."))
             return HttpResponseBadRequest(_(u"Username or ID required."))
         except IsNotCrowdformError:
+            logger.error(_(u"Sorry but the crowd form you submitted to is closed."))
             return HttpResponseNotAllowed(
                 _(u"Sorry but the crowd form you submitted to is closed.")
             )
         except InstanceEmptyError:
+            logger.error(_(u"Received empty submission. No instance was created"))
             return HttpResponseBadRequest(
                 _(u"Received empty submission. No instance was created")
             )
         except FormInactiveError:
+            logger.error(_(u"Form is not active"))
             return HttpResponseNotAllowed(_(u"Form is not active"))
         except XForm.DoesNotExist:
+            logger.log(_(u"Form does not exist on this account"))
             return HttpResponseNotFound(
                 _(u"Form does not exist on this account")
             )
         except ExpatError:
+            logger.error(_(u"Improperly formatted XML."))
             return HttpResponseBadRequest(_(u"Improperly formatted XML."))
 
         if instance is None:
+            logger.error(_(u"Unable to create submission."))
             return HttpResponseBadRequest(_(u"Unable to create submission."))
 
         # ODK needs two things for a form to be considered successful
@@ -215,11 +224,15 @@ def submission(request, username=None):
         response.status_code = 201
         response['Location'] = request.build_absolute_uri(request.path)
         return response
-    except IOError as e:
+    except IOError, e:
+        logger.error("%s" % e)
         if 'request data read error' in unicode(e):
             return HttpResponseBadRequest(_(u"File transfer interruption."))
         else:
             raise
+    except Exception, e:
+        logger.error("%s" % e)
+        raise
     finally:
         if len(xml_file_list):
             [_file.close() for _file in xml_file_list]

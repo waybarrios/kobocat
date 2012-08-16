@@ -4,6 +4,7 @@ import os
 import re
 import tempfile
 import traceback
+import logging
 
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -47,7 +48,10 @@ def create_instance(username, xml_file, media_files,
         If there is no username and a uuid, submitting a touchform.
         If there is a username and a uuid, submitting a new ODK form.
     """
+
     xml = xml_file.read()
+    logger = logging.getLogger('submissions')
+    logging.debug(xml)
     is_touchform = False
     # check alternative form submission ids
     if not uuid:
