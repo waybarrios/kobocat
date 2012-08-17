@@ -7,7 +7,9 @@ import urllib2
 from xml.parsers.expat import ExpatError
 import zipfile
 import logging
+import pytz
 
+from datetime import datetime
 from itertools import chain
 from django.views.decorators.http import require_GET, require_POST
 from django.views.decorators.csrf import csrf_exempt
@@ -38,7 +40,7 @@ from utils.user_auth import helper_auth_helper, has_permission,\
     has_edit_permission, HttpResponseNotAuthorized
 from odk_logger.import_tools import import_instances_from_zip
 from odk_logger.xform_instance_parser import InstanceEmptyError,\
-    InstanceInvalidUserError, IsNotCrowdformError
+    InstanceInvalidUserError, IsNotCrowdformError, DuplicateInstance
 from odk_logger.models.instance import FormInactiveError
 
 
@@ -104,7 +106,6 @@ def formList(request, username):
     """
     This is where ODK Collect gets its download list.
     """
-
     if  username.lower() == 'crowdforms':
         xforms = XForm.objects.filter(is_crowd_form=True)\
             .exclude(user__username=username)
@@ -126,28 +127,39 @@ def formList(request, username):
 
         xforms = \
             XForm.objects.filter(downloadable=True, user__username=username)
-
         # retrieve crowd_forms for this user
         crowdforms = XForm.objects.filter(
             metadata__data_type=MetaData.CROWDFORM_USERS,
             metadata__data_value=username
         )
         xforms = chain(xforms, crowdforms)
-    urls = [{
-        'url': request.build_absolute_uri(xform.url()),
-        'text': xform.title if not xform.is_crowd_form else
-            'Crowd/%s' % xform.title,
-        'media': {
-            'm': MetaData.media_upload(xform),
-            'user': xform.user,
-            'id': xform.id_string
-        }
-    } for xform in xforms]
+    response = render_to_response("xformsList.xml", {
+        #'urls': urls,
+        'host': request.build_absolute_uri()\
+            .replace(request.get_full_path(), ''),
+        'xforms': xforms
+    }, mimetype="text/xml; charset=utf-8")
+    response['X-OpenRosa-Version'] = '1.0'
+    tz = pytz.timezone(settings.TIME_ZONE)
+    dt = datetime.now(tz).strftime('%a, %d %b %Y %H:%M:%S %Z')
+    response['Date'] = dt
+    return response
 
-    return render_to_response("formList.xml", {
-        'urls': urls,
-        'host': 'http://%s' % request.get_host()
-    }, mimetype="text/xml")
+
+@require_GET
+def xformsManifest(request, username, id_string):
+    xform = get_object_or_404(XForm, id_string=id_string, user__username=username)
+    response = render_to_response("xformsManifest.xml", {
+        #'urls': urls,
+        'host': request.build_absolute_uri()\
+            .replace(request.get_full_path(), ''),
+        'media_files': MetaData.media_upload(xform)
+    }, mimetype="text/xml; charset=utf-8")
+    response['X-OpenRosa-Version'] = '1.0'
+    tz = pytz.timezone(settings.TIME_ZONE)
+    dt = datetime.now(tz).strftime('%a, %d %b %Y %H:%M:%S %Z')
+    response['Date'] = dt
+    return response
 
 
 @require_POST
@@ -205,6 +217,11 @@ def submission(request, username=None):
         except ExpatError:
             logger.error(_(u"Improperly formatted XML."))
             return HttpResponseBadRequest(_(u"Improperly formatted XML."))
+        except DuplicateInstance:
+            response = HttpResponse(_(u"Duplicate submission"))
+            response.status_code = 202
+            response['Location'] = request.build_absolute_uri(request.path)
+            return response
 
         if instance is None:
             logger.error(_(u"Unable to create submission."))
