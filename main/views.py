@@ -401,13 +401,12 @@ def xls2xform(request):
 
 
 def tutorial(request):
+    url = 'https://docs.google.com/document/pub?id='\
+        '1LrGGRXegn1VBnkXHES6ulWdMKHELLqL6Q_E8w2MMRX4'
+    doc = GoogleDoc(url)
     context = RequestContext(request)
-    context.template = 'tutorial.html'
-    username = request.user.username if request.user.username else \
-        'your-user-name'
-    context.odk_url = request.build_absolute_uri("/%s" % username)
+    context.content = doc.to_html()
     return render_to_response('base.html', context_instance=context)
-
 
 def syntax(request):
     url = 'https://docs.google.com/document/pub?id='\
