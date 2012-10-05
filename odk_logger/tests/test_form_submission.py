@@ -1,9 +1,12 @@
 """
 Testing POSTs to "/submission"
 """
+from django.db.models import Sum
 import os
 from main.tests.test_base import MainTestCase
-from odk_logger.models import XForm
+from odk_logger.models import XForm, Instance
+from odk_viewer.models.parsed_instance import GLOBAL_SUBMISSION_STATS
+from stats.models import StatsCount
 
 class TestFormSubmission(MainTestCase):
 
@@ -67,3 +70,34 @@ class TestFormSubmission(MainTestCase):
         self.assertEqual(self.response.status_code, 202)
         #/fixtures/test_forms/survey_names
 
+    def test_submission_stats_count(self):
+        """Test global submission counts, should not reduce on
+        submission delete."""
+        submission_count = StatsCount.objects.filter(
+            key=GLOBAL_SUBMISSION_STATS).aggregate(Sum('value'))
+        self.assertIsNone(submission_count['value__sum'])
+        self._publish_transportation_form()
+        self.xform  = XForm.objects.get(id_string='transportation_2011_07_25')
+        self._make_submissions()
+        submission_count = StatsCount.objects.filter(
+            key=GLOBAL_SUBMISSION_STATS).aggregate(Sum('value'))
+        self.assertIsNotNone(submission_count['value__sum'])
+        self.assertEqual(submission_count['value__sum'], 4)
+
+        # deleting submissions should not reduce submission counter
+        Instance.objects.all().delete()
+        self.assertEqual(Instance.objects.count(), 0)
+        submission_count = StatsCount.objects.filter(
+            key=GLOBAL_SUBMISSION_STATS).aggregate(Sum('value'))
+        self.assertEqual(submission_count['value__sum'], 4)
+
+    def test_unicode_submission(self):
+        """Test xml submissions that contain unicode characters
+        """
+        xml_submission_file_path = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            "../fixtures/tutorial/instances/"
+            "tutorial_unicode_submission.xml"
+        )
+        self._make_submission(xml_submission_file_path)
+        self.assertEqual(self.response.status_code, 201)

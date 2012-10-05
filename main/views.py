@@ -25,8 +25,11 @@ from main.models import UserProfile, MetaData
 from odk_logger.models import Instance, XForm
 from odk_viewer.models import DataDictionary, ParsedInstance
 from odk_viewer.models.data_dictionary import upload_to
+from odk_viewer.models.parsed_instance import GLOBAL_SUBMISSION_STATS
 from odk_viewer.views import image_urls_for_form, survey_responses, \
     attachment_url
+from stats.models import StatsCount
+from stats.tasks import stat_log
 from utils.decorators import is_owner
 from utils.logger_tools import response_with_mimetype_and_name, publish_form
 from utils.user_auth import check_and_set_user, set_profile_data,\
@@ -36,7 +39,11 @@ from utils.user_auth import check_and_set_user, set_profile_data,\
 
 def home(request):
     context = RequestContext(request)
-    context.num_forms = Instance.objects.count()
+    submission_count = StatsCount.stats.count(GLOBAL_SUBMISSION_STATS)
+    if not submission_count:
+        submission_count = Instance.objects.count()
+        stat_log(GLOBAL_SUBMISSION_STATS, submission_count)
+    context.num_forms = submission_count
     context.num_users = User.objects.count()
     context.num_shared_forms = XForm.objects.filter(shared__exact=1).count()
     if request.user.username:
@@ -584,8 +591,18 @@ def show_submission(request, username, id_string, uuid):
         survey_responses, kwargs={'instance_id': submission.pk}))
 
 
-@require_GET
+@require_POST
+@login_required
 def delete_data(request, username=None, id_string=None):
+    query = request.POST.get('query', None)
+    if query is None:
+        return HttpResponseBadRequest(_(u"Invalid query parameter"))
+
+    try:
+        simplejson.loads(query)
+    except ValueError:
+        return HttpResponseBadRequest(_(u"Invalid query parameter"))
+
     xform, owner = check_and_set_user_and_form(username, id_string, request)
     response_text = u''
     if not xform:
@@ -593,9 +610,10 @@ def delete_data(request, username=None, id_string=None):
     try:
         query_args = {
             "username": username, "id_string": id_string,
-            "query": request.GET.get('query'),
-            "fields": request.GET.get('fields'),
-            "sort": request.GET.get('sort')
+            "query": query,
+            "fields": request.POST.get('fields', None),
+            "sort": request.POST.get('sort', None),
+            "limit": 1
         }
 
         if 'limit' in request.GET:
@@ -606,10 +624,6 @@ def delete_data(request, username=None, id_string=None):
     else:
         records = list(record for record in cursor)
         if records.__len__():
-            today = datetime.today().strftime('%Y-%m-%dT%H:%M:%S')
-            ParsedInstance.edit_mongo(
-                query_args['query'],
-                '{ "$set": {"_deleted_at": "%s" }}' % today)
             for record in records:
                 Instance.delete_by_uuid(
                     username, id_string, uuid=record['_uuid'])
