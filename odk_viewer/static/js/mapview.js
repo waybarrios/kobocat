@@ -629,74 +629,55 @@ function _rebuildHexLegend(countOrProportion, questionName, responseNames)
 
 function rebuildLegend(questionName, questionColorMap)
 {
-    var i, response, spanAttrs, language;
     var question = formJSONMngr.getQuestionByName(questionName);
     var choices = formJSONMngr.getChoices(question);
-    var legendElement, legendTitle, legendUl;
     formResponseMngr._currentSelectOneQuestionName = questionName; //TODO: this should be done somewhere else?
+    var langs = formJSONMngr.supportedLanguages;
+
+    var legendTemplate =
+      '<div id="legend">\n  <h3>\n' +
+      '  <% _.each(langs, function(language, idx) { %>' +
+      '    <span class="language language-<%= idx %>"' +
+            '<% if (idx!= currentLanguageIdx) { %> style="display: none;" <% } %>>'  +
+            ' <%= questionLabels[idx] %> </span>\n' +
+      '  <% }); %> \n  </h3>\n' +
+      '  <ul class="nav nav-pills nav-stacked">' +
+      '    <% _.each(responses, function(response, idx) { %>\n' +
+      '    <li>\n      <a class="legend-label <%=response.status %>" href="javascript:;"' +
+                ' rel="<%= response.name %>">\n' +
+      '        <span class="legend-bullet" style="background-color:<%= response.color %>;"></span>\n' +
+      '        <span class="legend-response-count"> <%= response.count %> </span>\n' +
+      '  <%   _.each(langs, function(language, idx) { %>' +
+      '         <span class="item-label language language-<%= idx %>"' +
+                '<% if (idx!= currentLanguageIdx) { %> style="display: none;" <% } %>>'  +
+                '<%= response.labels[idx] %></span>\n' +
+      '  <%   }); %>  ' +
+      '\n     </a>\n    </li>' +
+      '  <% }); %> \n  </ul>';
+    var responses = _.map(questionColorMap, function(color, response) {
+        var rLabels = _.map(langs, function(language) {
+            if(response in choices) /* TODO: copying old logic ... needed? */
+                return formJSONMngr.getMultilingualLabel(choices[response], language);
+            else  
+                return response;
+        });
+        var numResponses = question.responseCounts[response];
+        return { name: response,
+                 color: color,
+                 count: '' + numResponses,
+                 status: ((formResponseMngr._select_one_filters.indexOf(response) > -1) ? 'active'
+                        : (numResponses > 0 ? 'normal' : 'inactive')),
+                 labels: rLabels
+        };
+    });
+    var questionLabels = _.map(langs, function(language, idx) {
+        return formJSONMngr.getMultilingualLabel(question, language); 
+    });
 
     $('#legend').remove();
-
-    legendElement = $('<div></div>').attr('id', 'legend');
-    legendTitle = $('<h3></h3>');
-
-    for(i=0;i<formJSONMngr.supportedLanguages.length;i++)
-    {
-        var titleSpan;
-
-        language = getLanguageAt(i);
-        titleSpan = $('<span></span>').addClass('language').addClass('language-' + i)
-            .html(formJSONMngr.getMultilingualLabel(question, language));
-        if(i != currentLanguageIdx)
-            titleSpan.css('display', 'none');
-        legendTitle.append(titleSpan);
-    }
-    legendElement.append(legendTitle);
-
-    legendUl = $('<ul></ul>').addClass('nav nav-pills nav-stacked');
-    legendElement.append(legendUl);
-
-    for(response in questionColorMap)
-    {
-        var color = questionColorMap[response];
-        var responseLi = $('<li></li>');
-        var numResponses = question.responseCounts[response];
-        
-        // create the anchor
-        var legendAnchor = $('<a></a>').addClass('legend-label').attr('href', 'javascript:;').attr('rel',response);
-        if(formResponseMngr._select_one_filters.indexOf(response) > -1)
-            legendAnchor.addClass('active');
-        else if(numResponses > 0)
-            legendAnchor.addClass('normal');
-        else
-            legendAnchor.addClass('inactive');
-
-        var legendIcon = $('<span></span>').addClass('legend-bullet').css('background-color', color);
-        legendAnchor.append(legendIcon);
-
-        var responseCountSpan = $('<span></span>').addClass('legend-response-count').html(numResponses.toString());
-        legendAnchor.append(responseCountSpan);
-
-        // add a language span for each language
-        for(i=0;i<formJSONMngr.supportedLanguages.length;i++)
-        {
-            var itemLabel = response;
-            language = getLanguageAt(i);
-            // check if the choices contain this response before we try to get the reponse's label
-            if(choices.hasOwnProperty(response))
-                itemLabel = formJSONMngr.getMultilingualLabel(choices[response], language);
-            var responseText = $('<span></span>').addClass(('item-label language language-' + i)).html(itemLabel);
-            if(i != currentLanguageIdx)
-                responseText.css('display', 'none');
-            legendAnchor.append(responseText);
-        }
-
-        responseLi.append(legendAnchor);
-        legendUl.append(responseLi);
-    }
-
-    // add as the first element always
-    legendsContainer.prepend(legendElement);
+    legendsContainer.prepend($(_.template(legendTemplate, 
+      { langs: langs, responses: responses, questionLabels: questionLabels })
+    ));
 
     // bind legend click event
     $('a.legend-label').on('click', function(){
