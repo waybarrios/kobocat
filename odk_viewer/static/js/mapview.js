@@ -51,7 +51,7 @@ var navContainerSelector = ".nav.pull-right";
 var leafletControlSelector = ".leaflet-control-container";
 var legendContainerId = "legend";
 var formJSONMngr = new FormJSONManager(formJSONUrl, loadFormJSONCallback);
-var formResponseMngr = new FormResponseManager(mongoAPIUrl, loadResponseDataCallback);
+var formResponseMngr = new FormResponseManager(mongoAPIUrl, loadResponseDataCallback, formJSONMngr);
 var currentLanguageIdx = -1;
 var customMapBoxTileLayer;
 var legendsContainer;

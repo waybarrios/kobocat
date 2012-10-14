@@ -373,7 +373,7 @@ outer:
     
     /** @private */
     function dict(lut) {
-        return lut.reduce(function(a,b,i) { a[b] = i; return a; }, {});
+        return _(lut).reduce(function(a,b,i) { a[b] = i; return a; }, {});
     };
 
     // populate data table

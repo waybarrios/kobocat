@@ -138,12 +138,13 @@ FormJSONManager.prototype.getMultilingualLabel = function(question, language)
 };
 
 // used to manage response data loaded via ajax
-FormResponseManager = function(url, callback)
+FormResponseManager = function(url, callback, formJSONManager)
 {
     this.url = url;
     this.callback = callback;
     this._select_one_filters = [];
     this._currentSelectOneQuestionName = null; // name of the currently selected "View By Question if any"
+    this.formJSONMngr = formJSONManager;
 };
 
 FormResponseManager.prototype.loadResponseData = function(params, start, limit, geoPointField, otherFieldsToLoad)
@@ -301,7 +302,7 @@ FormResponseManager.prototype.dvQuery = function(dvQueryObj)
 FormResponseManager.prototype._toDatavore = function(rebuildFlag)
 {
     var dvData = {}, qName = '';
-    var questions = formJSONMngr.questions;
+    var questions = this.formJSONMngr.questions;
     var responses = this.responses;
     // Datavore table should only be built once, unless rebuildFlag is passed in
     if (this.dvResponseTable && !rebuildFlag) return;

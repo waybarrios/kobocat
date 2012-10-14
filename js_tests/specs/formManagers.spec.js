@@ -2,6 +2,7 @@
 EnvJasmine.load(EnvJasmine.mocksDir + "formManagers.mock.js");
 EnvJasmine.load(EnvJasmine.jsDir + "main/static/js/formManagers.js");
 EnvJasmine.load(EnvJasmine.jsDir + "main/static/js/underscore-min.js");
+EnvJasmine.load(EnvJasmine.jsDir + "main/static/js/dv.js");
 
 describe("FormJSON tests", function() {
     var sampleFJM1, sampleFJM2;
@@ -62,6 +63,27 @@ describe("FormJSON tests", function() {
             expect(sampleFJM2.getMultilingualLabel(facilityQ, "French")).toEqual(fjmData2.labelsForFacilityType.French);
             expect(sampleFJM2.getMultilingualLabel(facilityQ, "^&~#*(")).toEqual(fjmData2.labelsForFacilityType.French);
             expect(sampleFJM2.getMultilingualLabel(sampleFJM2.getQuestionByName('start'))).toEqual('start');
+        });
+    });
+});
+
+describe("FormJSON tests", function() {
+    var sampleFJM1, sampleFRM1;
+    beforeEach(function () {
+        sampleFJM1 = new FormJSONManager(fjmData1.url);
+        sampleFJM1._init(fjmData1.actualJSON);
+
+        sampleFRM1 = new FormResponseManager(frmData1.url, undefined, sampleFJM1);
+        /* TODO: refactor formResponseManager so that this isn't as hacky down here. */
+        sampleFRM1.responses = frmData1.responses;
+        sampleFRM1.responseCount = frmData1.responses.length;
+        sampleFRM1._toDatavore();
+    });
+    
+    it ("checks that form response loads data properly", function () {
+        runs(function () {
+            expect(sampleFRM1).toBeDefined();
+            expect(sampleFRM1.callback).toBeUndefined();
         });
     });
 });
