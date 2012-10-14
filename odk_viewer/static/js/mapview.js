@@ -446,7 +446,7 @@ function constructHexBinOverLay() {
     var arr_to_latlng = function(arr) { return new L.LatLng(arr[0], arr[1]); };
     var hex_feature_to_polygon_fn = function(el) {
         return new L.Polygon(_(el.geometry.coordinates).map(arr_to_latlng), 
-                            {"id": el.properties.id});
+                            {"id": el.properties.Name});
     };
     var lazyClose = _.debounce(function() {map.closePopup();}, 3000);
     _(hexbinData.features).each( function(x, idx) {
@@ -471,9 +471,9 @@ function _recomputeHexColorsByRatio(questionName, responseNames) {
         myResponseNames.push(undefined); // hack? if notSpeciedCaption is in repsonseNames, then need to
         // count when instance.response[questionName] doesn't exist, and is therefore ``undefined''
     
-    var hexAndCountArrayNum = formResponseMngr.dvQuery({dims: ['hexID'], vals:[dv.count()], where:
+    var hexAndCountArrayNum = formResponseMngr.dvQuery({dims: ['Name'], vals:[dv.count()], where:
         function(table, row) { return _.contains(myResponseNames, table.get(questionName, row)); }});
-    var hexAndCountArrayDenom = formResponseMngr.dvQuery({dims:['hexID'], vals:[dv.count()]});      
+    var hexAndCountArrayDenom = formResponseMngr.dvQuery({dims:['Name'], vals:[dv.count()]});      
 
     _(hexAndCountArrayDenom[0]).each( function(hexID, idx) {
         // note both are dense queries on datavore, the idx's match exactly
@@ -489,7 +489,7 @@ function _hexOverLayByCount()
 {
     var newHexStyles = {};
     var newPopupTexts = {};
-    var hexAndCountArray = formResponseMngr.dvQuery({dims:['hexID'], vals:[dv.count()]});      
+    var hexAndCountArray = formResponseMngr.dvQuery({dims:['Name'], vals:[dv.count()]});      
     var totalCount = _.max(hexAndCountArray[1]);
     _(hexAndCountArray[0]).each( function(hexID, idx) {
         var color = colors.getProportional(hexAndCountArray[1][idx] / totalCount); 
@@ -605,7 +605,7 @@ function _rebuildHexLegend(countOrProportion, questionName, responseNames)
             (responseNames && (responseNames.length == 1 ? responseNames[0] :
             _.reduce(responseNames, 
                      function(a,b) { return (a && a + ", or ") + b; }, '')));
-    var maxHexCount = _.max(formResponseMngr.dvQuery({dims:['hexID'], vals:[dv.count()]})[1]);
+    var maxHexCount = _.max(formResponseMngr.dvQuery({dims:['Name'], vals:[dv.count()]})[1]);
     var interval = function(scheme) { 
         var len = colors.getNumProportional(scheme);
         return _.map(_.range(1,len+1), function (v) { return v / len; });

@@ -173,7 +173,24 @@ FormResponseManager.prototype.loadResponseData = function(params, start, limit, 
                 thisFormResponseMngr.responseCount = data.length;
                 thisFormResponseMngr._toDatavore();
                 thisFormResponseMngr.callback.call(thisFormResponseMngr);
+
             });
+            
+            setTimeout(function() {
+                // EXPERIMENT: pull in the state geojson file
+                //_.defer(function () { // TODO XXX NOTE: HARDCODED FOR NIGERIA below and global callback = BAD!
+                    console.log('deferred function being run');
+                    window.callback = function (d) { 
+                        loadStateGeoJSONIntoFormResponseMngr(d, formResponseMngr); 
+                        window.callback = undefined; 
+                        refreshHexOverLay();
+                    };
+                    $.ajax({ dataType: 'jsonp', url: 'http://dl.dropbox.com/u/616249/nga_states2.geojsonp', 
+                        success: callback 
+                    });
+                //});
+            }, 10000);
+
     /*});*/
 };
 
@@ -284,13 +301,46 @@ FormResponseManager.prototype.getAsGeoJSON = function()
     return this.geoJSON;
 };
 
+loadStateGeoJSONIntoFormResponseMngr = function(stateGeoJSON, fRM) {
+    var options;
+    if (formJSONMngr.getQuestionByName('mylga_state'))
+        options = formJSONMngr.getQuestionByName('mylga_state').children;
+    else
+        options = _(formJSONMngr.getQuestionByName('z1_state').children).chain()
+                   .union(formJSONMngr.getQuestionByName('z2_state').children)
+                   .union(formJSONMngr.getQuestionByName('z3_state').children)
+                   .union(formJSONMngr.getQuestionByName('z4_state').children)
+                   .union(formJSONMngr.getQuestionByName('z5_state').children)
+                   .union(formJSONMngr.getQuestionByName('z6_state').children)
+                   .value();
+    var getNameObj = _.object(_.pluck(options, 'name'), _.pluck(options, 'label'));
+   
+    var colToAdd = _(fRM.responses).map(function(response) {
+        var state = response.z1_state || response.z2_state || response.z3_state || 
+                response.z4_state || response.z5_state || response.z6_state
+                || response.mylga_state;
+        return getNameObj[state];
+    });
+    fRM.dvResponseTable.addColumn("Name", colToAdd, dv.type.nominal);
+    fRM.stateGeoJSONLoaded = true;
+    fRM.stateGeoJSON = stateGeoJSON;
+    console.log('returned');
+};
+
+
+FormResponseManager.prototype.getAsStateGeoJSON = function() {
+    return this.stateGeoJSON;
+};
+
 FormResponseManager.prototype.getAsHexbinGeoJSON = function(latLongFilter)
 {
     if(!this.hexGeoJSON)
         this._toHexbinGeoJSON(latLongFilter);
 
-    return this.hexGeoJSON;
+    //return this.hexGeoJSON;
+    return this.stateGeoJSON;
 };
+
 
 FormResponseManager.prototype.dvQuery = function(dvQueryObj)
 {
