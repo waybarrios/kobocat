@@ -1,6 +1,8 @@
+from django.core.urlresolvers import reverse
 from main.tests.test_base import MainTestCase
 #from django.test import TestCase
 from odk_logger.models import Instance
+from odk_logger.views import bulksubmission
 import os
 import glob
 
@@ -73,3 +75,14 @@ class TestImportingDatabase(MainTestCase):
         self.assertEqual(success, 0)
         expected_errors = [u'File is not a zip file']
         self.assertEqual(errors, expected_errors)
+
+    def test_bulk_import_post(self):
+        zip_file_path = os.path.join(
+            DB_FIXTURES_PATH, "bulk_submission_w_extra_instance.zip")
+        url = reverse(bulksubmission, kwargs={
+            "username": self.user.username
+        })
+        with open(zip_file_path, "rb") as zip_file:
+            post_data = {'zip_submission_file': zip_file}
+            response = self.client.post(url, post_data)
+        self.assertEqual(response.status_code, 200)
