@@ -104,15 +104,20 @@ def clone_xlsform(request, username):
                 {
                     'id_string': survey.id_string,
                 }, audit, request)
+            enketo_webform_url = reverse(
+                enter_data,
+                kwargs={'username': to_username, 'id_string': survey.id_string}
+            )
+            profile_url = reverse(profile, kwargs={'username': to_username})
             return {
                 'type': 'alert-success',
                 'text': _(u'Successfully cloned %(id_string)s into your '
-                          u'%(profile_url)s') % {
+                          u'<a href="%(profile_url)s">profile</a>.'
+                          u' <a href="%(form_url)s">Enter Web Form</a>' % {
                               'id_string': survey.id_string,
-                              'profile_url': u'<a href="%s">profile</a>.' %
-                              reverse(profile,
-                                      kwargs={'username': to_username})
-                          }
+                              'profile_url': profile_url,
+                              'form_url': enketo_webform_url
+                          })
             }
     context.message = publish_form(set_form)
     if request.is_ajax():
