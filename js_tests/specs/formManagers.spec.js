@@ -1,17 +1,17 @@
 // Load mocks for this spec
 EnvJasmine.load(EnvJasmine.mocksDir + "formManagers.mock.js");
-EnvJasmine.load(EnvJasmine.jsDir + "main/static/js/formManagers.js");
+EnvJasmine.load(EnvJasmine.jsDir + "main/static/js/formManager.js");
 EnvJasmine.load(EnvJasmine.jsDir + "main/static/js/underscore-min.js");
 
 describe("FormJSON tests", function() {
     var sampleFJM1, sampleFJM2, sampleFJM2_1;
     beforeEach(function () {
-        sampleFJM1 = new FormJSONManager(fjmData1.url);
-        sampleFJM1._init(fjmData1.actualJSON);
-        sampleFJM2 = new FormJSONManager(fjmData2.url);
-        sampleFJM2._init(fjmData2.actualJSON);
-        sampleFJM2_1 = new FormJSONManager(fjmData2.url);
-        sampleFJM2_1._init(fjmData2_1.actualJSON);
+        sampleFJM1 = new Form(fjmData1.url, undefined, true);
+        sampleFJM1.init(fjmData1.actualJSON);
+        sampleFJM2 = new Form(fjmData2.url, undefined, true);
+        sampleFJM2.init(fjmData2.actualJSON);
+        sampleFJM2_1 = new Form(fjmData2.url, undefined, true);
+        sampleFJM2_1.init(fjmData2_1.actualJSON);
     });
     
     it ("checks that form json loads properly for init with no callback", function () {
