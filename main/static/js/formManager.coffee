@@ -1,12 +1,17 @@
 class Question
-    constructor: (@type, @name, @label, children) ->
+    constructor: (obj) ->
+        @type = obj.type if _(obj).has('type')
+        @name = obj.name if _(obj).has('name')
+        @label = obj.label if _(obj).has('label')
+        @hint = obj.hint if _(obj).has('hint')
         #TODO: construct @choices from children
+        choices = {}
+        if _(obj).has('children')
+            _(obj.children).each (c) -> choices[c.name] = c
+        @choices = choices
 
     getSupportedLanguages : () ->
-        if typeof(@label) == 'string'
-            return 'default'
-        else
-            return _.keys(@label)
+        return _.keys(@label) if typeof(@label) == 'object'
         
     getLabel : (language) ->
         return @label if typeof(@label) == 'string'
@@ -15,7 +20,9 @@ class Question
             return @label[language]
         else
             return _.values(@label)[0]
-
+    
+    getChoices : () ->
+        @choices
 
 class Form
     constructor: (@url, @callback, manualInit=False) ->
@@ -34,33 +41,35 @@ class Form
 
     _parseQuestions : (questionList, parentQuestionName="", sep="/") ->
         for question in questionList
-            if question.type == "group" and question.children
+            if question.type in ["group","repeat"] and question.children
                 @parseQuestions(question.children, question.name)
             else
                 prefix = if parentQuestionName then parentQuestionName + sep else ""
                 question.name = prefix + question.name
-                #@questions.push(question)
-                @questions[question.name] = question
-        console.log _.pluck(_.values(@questions), 'type')
+                #@questions[question.name] = question
+                @questions[question.name] = new Question(question)
         return
 
     _parseSupportedLanguages : () ->
-        _.uniq(_.flatten([q.supportedLanguages() for q in @questions]))
+        @supportedLanguages = _(@questions).chain()
+            .map((q) -> return q.getSupportedLanguages())
+            .flatten().compact().uniq()
+            .value()
     
-    # filterObj can be {"type" : ["type1", "type2"]} or {"name" : "name1"}
-    getFilteredQuestions : (whatToFilter, listOfOptions) ->
-        q for q in @questions when q[whatToFilter] in listOfOptions
-    
+    getQuestionsOfTypes : (types) ->
+        _(@questions).filter (q) -> _(types).find (t) -> t == q.type
 
-    getQuestionsOfTypes : (types) -> 
-        q for q in @questions when q.type in types
-    getQuestionsOfType : (type) -> @getQuestionsOfTypes [type]
+    getQuestionsOfType : (type) ->
+        _(@questions).filter (q) -> type == q.type
     
     getNumQuestionsOfType : (type) -> (@getQuestionOfType type).length
-
     getSelectOneQuestions : () -> @getQuestionsOfType "select one"
     getNumSelectOneQuestions : () -> @getNumQuestionsOfType "select one"
     getGeoPointQuestion : () -> @getQuestionsOfTypes(["gps","geopoint"])[0]
+    getAllGeoPointQuestions : () -> @getQuestionsOfTypes(["gps","geopoint"])
        
     getQuestionByName: (qName) -> @questions[qName]
 
+# Finally, export the Form and Question Classes
+window.Form = Form
+window.Question = Question

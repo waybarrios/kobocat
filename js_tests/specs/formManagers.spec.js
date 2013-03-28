@@ -22,8 +22,8 @@ describe("FormJSON tests", function() {
     });
     it ("checks that form json init parses geopoints and supportedLanguages ", function () {
         runs(function() {
-            expect(sampleFJM1.getGeoPointQuestion()).toEqual(fjmData1.geoPointQuestions[0]);
-            expect(sampleFJM1.geopointQuestions).toEqual(fjmData1.geoPointQuestions);
+            var gq = fjmData1.geoPointQuestions[0];
+            expect(sampleFJM1.getGeoPointQuestion()).toEqual(new Question(gq));
             expect(sampleFJM1.supportedLanguages).toEqual(fjmData1.supportedLanguages);
         });
     });
@@ -35,35 +35,28 @@ describe("FormJSON tests", function() {
     });
     it ("checks questions are returned by name, and choices are returned by question", function () {
         runs(function() {
-            expect(sampleFJM1.getQuestionByName('water_point_geocode')).toEqual(fjmData1.geoPointQuestions[0]);
-            expect(sampleFJM1.getChoices(sampleFJM1.getQuestionByName('animal_point'))).toEqual(fjmData1.choicesForAnimalPoint);
+            expect(sampleFJM1.getQuestionByName('water_point_geocode')).toEqual(new Question(fjmData1.geoPointQuestions[0]));
+            expect(sampleFJM1.getQuestionByName('animal_point').getChoices()).toEqual(fjmData1.choicesForAnimalPoint);
         });
     });
     it ("checks that form json parses labels for English", function () {
         runs(function() {
             var geoQ = sampleFJM1.getQuestionByName('water_point_geocode');
-            expect(sampleFJM1.getMultilingualLabel(geoQ)).toEqual(fjmData1.geoPointQuestions[0].label.English);
-            expect(sampleFJM1.getMultilingualLabel(geoQ), "English").toEqual(fjmData1.geoPointQuestions[0].label.English);
-            expect(sampleFJM1.getMultilingualLabel(geoQ), "French").toEqual(fjmData1.geoPointQuestions[0].label.English);
-            expect(sampleFJM1.getMultilingualLabel(geoQ), "^&~#*(").toEqual(fjmData1.geoPointQuestions[0].label.English);
+            expect(geoQ.getLabel()).toEqual(fjmData1.geoPointQuestions[0].label.English);
+            expect(geoQ.getLabel("English")).toEqual(fjmData1.geoPointQuestions[0].label.English);
+            expect(geoQ.getLabel("French")).toEqual(fjmData1.geoPointQuestions[0].label.English);
+            expect(geoQ.getLabel("^&~#*(")).toEqual(fjmData1.geoPointQuestions[0].label.English);
 
         });
     });
     it ("checks that form json parses labels", function () {
         runs(function() {
-            var geoQ = sampleFJM1.getQuestionByName('water_point_geocode');
-            expect(sampleFJM1.getMultilingualLabel(geoQ)).toEqual(fjmData1.geoPointQuestions[0].label.English);
-            expect(sampleFJM1.getMultilingualLabel(geoQ, "English")).toEqual(fjmData1.geoPointQuestions[0].label.English);
-            expect(sampleFJM1.getMultilingualLabel(geoQ, "French")).toEqual(fjmData1.geoPointQuestions[0].label.English);
-            expect(sampleFJM1.getMultilingualLabel(geoQ, "^&~#*(")).toEqual(fjmData1.geoPointQuestions[0].label.English);
-        });
-        runs(function() {
-            var facilityQ = sampleFJM2.getQuestionByName('facility_type');
-            expect(sampleFJM2.getMultilingualLabel(facilityQ)).toEqual(fjmData2.labelsForFacilityType.French);
-            expect(sampleFJM2.getMultilingualLabel(facilityQ, "English")).toEqual(fjmData2.labelsForFacilityType.English);
-            expect(sampleFJM2.getMultilingualLabel(facilityQ, "French")).toEqual(fjmData2.labelsForFacilityType.French);
-            expect(sampleFJM2.getMultilingualLabel(facilityQ, "^&~#*(")).toEqual(fjmData2.labelsForFacilityType.French);
-            expect(sampleFJM2.getMultilingualLabel(sampleFJM2.getQuestionByName('start'))).toEqual('start');
+            var geoQ = sampleFJM2.getQuestionByName('facility_type');
+            expect(geoQ.getLabel()).toEqual(fjmData2.labelsForFacilityType.French);
+            expect(geoQ.getLabel("English")).toEqual(fjmData2.labelsForFacilityType.English);
+            expect(geoQ.getLabel("French")).toEqual(fjmData2.labelsForFacilityType.French);
+            expect(geoQ.getLabel("^&~#*(")).toEqual(fjmData2.labelsForFacilityType.French);
+            //expect(sampleFJM2.getQuestionByName('start').getLabel()).toEqual('start');
         });
     });
     it("checks that multi-lang labels are properly parsed when there is a mismatch in language labels", function(){
