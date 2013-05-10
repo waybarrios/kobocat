@@ -19,7 +19,7 @@ from sms_support.tools import (SMS_API_ERROR, SMS_PARSING_ERROR,
                                NA_VALUE, META_FIELDS,
                                MEDIA_TYPES, DEFAULT_DATE_FORMAT,
                                DEFAULT_DATETIME_FORMAT,
-                               SMS_SUBMISSION_ACCEPTED)
+                               SMS_SUBMISSION_ACCEPTED, is_last)
 
 
 class SMSSyntaxError(ValueError):
@@ -162,6 +162,8 @@ def parse_sms_text(xform, identity, text):
         elif xlsf_type == 'datetime':
             return safe_wrap(lambda: datetime.strptime(value,
                                                        xlsf_datetime_fmt))
+        elif xlsf_type == 'note':
+            return safe_wrap(lambda: '')
         raise SMSCastingError(_(u"Unsuported column '%(type)s'")
                               % {'type': xlsf_type}, xlsf_name)
 
@@ -182,6 +184,7 @@ def parse_sms_text(xform, identity, text):
     # list of (name, data) tuples for media contents
     medias = []
     # keep track of required questions
+    notes = []
 
     # loop on all XLSForm questions
     for expected_group in json_survey.get('children', [{}]):
@@ -207,9 +210,14 @@ def parse_sms_text(xform, identity, text):
             real_value = None
 
             question_type = question.get('type')
-            if question_type in ('calculate', 'note'):
+            if question_type in ('calculate'):
                 # 'calculate' question are not implemented.
                 # 'note' ones are just meant to be displayed on device
+                continue
+
+            if question_type == 'note':
+                if not question.get('constraint', ''):
+                    notes.append(question.get('label'))
                 continue
 
             if not allow_media and question_type in MEDIA_TYPES:
@@ -225,7 +233,7 @@ def parse_sms_text(xform, identity, text):
                 # actual SMS-sent answer.
                 # Only last answer/question of each group is allowed
                 # to have multiple spaces
-                if idx == len(egroups) - 1:
+                if is_last(idx, egroups):
                     answer = u" ".join(answers[idx:])
                 else:
                     answer = answers[idx]
@@ -239,7 +247,7 @@ def parse_sms_text(xform, identity, text):
             survey_answers[expected_group.get('name')] \
                 .update({question.get('name'): real_value})
 
-    return survey_answers, medias
+    return survey_answers, medias, notes
 
 
 def process_incoming_smses(username, incomings,
@@ -248,6 +256,7 @@ def process_incoming_smses(username, incomings,
 
     xforms = []
     medias = []
+    xforms_notes = []
     responses = []
     resp_str = {'success': _(u"[SUCCESS] Your submission has been accepted. "
                              u"It's ID is {{ id }}.")}
@@ -290,8 +299,9 @@ def process_incoming_smses(username, incomings,
             return
 
         # parse text into a dict object of groups with values
-        json_submission, medias_submission = parse_sms_text(xform,
-                                                            identity, text)
+        json_submission, medias_submission, notes = parse_sms_text(xform,
+                                                                   identity,
+                                                                   text)
 
         # retrieve sms_response if exist in the form.
         json_survey = json.loads(xform.json)
@@ -327,9 +337,20 @@ def process_incoming_smses(username, incomings,
         xml_submission = json2xform(jsform=json_submission,
                                     form_id=xform.id_string)
 
+        # compute notes
+        data = {}
+        for g in json_submission.values():
+            data.update(g)
+        for idx, note in enumerate(notes):
+            try:
+                notes[idx] = note.replace('${', '{').format(**data)
+            except:
+                pass
+
         # process_incoming expectes submission to be a file-like object
         xforms.append(StringIO.StringIO(xml_submission))
         medias.append(medias_submission)
+        xforms_notes.append(notes)
 
     for incoming in incomings:
         try:
@@ -349,6 +370,8 @@ def process_incoming_smses(username, incomings,
                                       response.get('id'),
                                       resp_str.get('success'), re.I)
             response.update({'text': success_response})
+            # add sendouts (notes)
+            response.update({'sendouts': xforms_notes[idx]})
         responses.append(response)
 
     return responses
