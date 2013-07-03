@@ -35,3 +35,19 @@ MONGO_DATABASE = {
     'USER': '',
     'PASSWORD': ''
 }
+
+TESTING_MODE = False
+if len(sys.argv)>=2 and (sys.argv[1]=="test" or sys.argv[1]=="test_all"):
+    TESTING_MODE = True
+else:
+    TESTING_MODE = False
+
+# testing databases
+if TESTING_MODE:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': 'test_db.sqlite3',
+        }
+    }
+    MONGO_DATABASE['NAME'] = 'formhub_test'
