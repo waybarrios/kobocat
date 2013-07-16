@@ -1,4 +1,5 @@
 import json
+import sys
 import os
 import tempfile
 import urllib2
@@ -29,7 +30,7 @@ from poster.streaminghttp import register_openers
 
 from utils.logger_tools import create_instance, OpenRosaResponseBadRequest, \
     OpenRosaResponseNotAllowed, OpenRosaResponse, OpenRosaResponseNotFound,\
-    BaseOpenRosaResponse, \
+    BaseOpenRosaResponse, report_exception, \
     inject_instanceid, remove_xform, publish_xml_form, publish_form
 from models import XForm, Instance
 from main.models import UserProfile, MetaData
@@ -485,8 +486,9 @@ def enter_data(request, username, id_string):
             messages.add_message(request, messages.WARNING, json_msg)
             return render_to_response("profile.html", context_instance=context)
 
-    except urllib2.URLError:
+    except urllib2.URLError, e:
         # this will happen if we could not connect to enketo
+        report_exception("Error accessing Enketo", e, sys.exc_info())
         messages.add_message(
             request, messages.WARNING,
             _("Enketo error: Unable to open webform url."))
