@@ -341,6 +341,18 @@ def get_min_max_range(xform, field=None):
     return data
 
 
+def get_stddev_for_field(field, xform):
+    return np.std(get_field_records(field, xform))
+
+
+def get_stddev_for_numeric_fields_in_form(xform, field=None):
+    data = {}
+    for field_name in [field] if field else get_numeric_fields(xform):
+        median = get_stddev_for_field(field_name, xform)
+        data.update({field_name: median})
+    return data
+
+
 def get_all_stats(xform, field=None):
     data = {}
     for field_name in [field] if field else get_numeric_fields(xform):
@@ -348,6 +360,7 @@ def get_all_stats(xform, field=None):
         mode = get_mode_for_field(field_name, xform)
         mean = get_mean_for_field(field_name, xform)
         median = get_median_for_field(field_name, xform)
+        stddev = get_stddev_for_field(field_name, xform)
         data[field_name] = {
             'mean': round(mean, DECIMAL_PRECISION),
             'median': median,
@@ -355,6 +368,7 @@ def get_all_stats(xform, field=None):
             'max': _max,
             'min': _min,
             'range': _range
+            'stddev': round(stddev, DECIMAL_PRECISION),
         }
     return data
 

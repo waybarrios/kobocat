@@ -13,9 +13,9 @@ from onadata.libs.serializers.stats_serializer import (
 class StatsViewSet(AnonymousUserPublicFormsMixin,
                    viewsets.ReadOnlyModelViewSet):
     """
-Stats summary for median, mean, mode, range, max, min.
+Stats summary for median, mean, mode, range, max, min, stddev.
 A query parameter `method` can be used to limit the results to either
-`mean`, `median`, `mode` or `range` only results.
+`mean`, `median`, `mode`, `range`, or `stddev` only results.
 
 Example:
 

@@ -6,7 +6,8 @@ from onadata.apps.api.tools import (
     get_all_stats,
     get_mode_for_numeric_fields_in_form,
     get_mean_for_numeric_fields_in_form,
-    get_median_for_numeric_fields_in_form, get_min_max_range
+    get_median_for_numeric_fields_in_form, get_min_max_range,
+    get_stddev_for_numeric_fields_in_form
 )
 from onadata.apps.logger.models.xform import XForm
 from onadata.libs.data.query import get_form_submissions_grouped_by_field
@@ -17,7 +18,8 @@ STATS_FUNCTIONS = {
     'mean': get_mean_for_numeric_fields_in_form,
     'median': get_median_for_numeric_fields_in_form,
     'mode': get_mode_for_numeric_fields_in_form,
-    'range': get_min_max_range
+    'range': get_min_max_range,
+    'stddev': get_stddev_for_numeric_fields_in_form
 }
 
 
