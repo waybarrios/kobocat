@@ -390,7 +390,9 @@ def configure_logging(logger, **kwargs):
 after_setup_logger.connect(configure_logging)
 
 MONGO_DATABASE = {
-    'HOST': 'localhost',
+    # The hostname needs to match the name given to the container in
+    # /docker-compose.yml
+    'HOST': 'mongo',
     'PORT': 27017,
     'NAME': 'formhub',
     'USER': '',

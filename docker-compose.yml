@@ -1,0 +1,22 @@
+postgres:
+  image: postgres
+
+mongo:
+  image: mongo
+
+rabbitmq:
+  image: rabbitmq
+
+memcached:
+  image: memcached
+
+kobocat:
+  build: .
+  command: /bin/bash run.sh
+  ports:
+    - "8000:8000"
+  links:
+    - postgres
+    - mongo
+    - rabbitmq
+    - memcached
