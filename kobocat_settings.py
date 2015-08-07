@@ -10,7 +10,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 import dj_database_url
 
 DATABASES = {
-    'default': dj_database_url.config(default="sqlite:///%s/db.sqlite3" % BASE_DIR)
+    'default': dj_database_url.config(default="postgis://postgres:@postgis:5432/template_postgis")
 }
 
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'mlfs33^s1l4xf6a36$0xsrgcpj_dd*sisfo6HOktYXB9y')
