@@ -1,5 +1,5 @@
-postgres:
-  image: postgres
+postgis:
+  image: mdillon/postgis
 
 mongo:
   image: mongo
@@ -16,7 +16,7 @@ kobocat:
   ports:
     - "8000:8000"
   links:
-    - postgres
+    - postgis
     - mongo
     - rabbitmq
     - memcached

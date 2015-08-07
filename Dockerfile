@@ -21,6 +21,7 @@ RUN apt-get install -y \
     zlib1g-dev \
     binutils \
     libproj-dev \
+    libgeos-dev \
     libxslt1-dev \
     libxml2-dev \
     libmemcached-dev \
