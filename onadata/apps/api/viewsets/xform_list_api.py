@@ -36,9 +36,14 @@ class XFormListApi(viewsets.ReadOnlyModelViewSet):
     renderer_classes = (XFormListRenderer,)
     serializer_class = XFormListSerializer
     template_name = 'api/xformsList.xml'
+    # Temporary; see comment in __init__()
+    authentication_classes = (DigestAuthentication,)
 
     def __init__(self, *args, **kwargs):
         super(XFormListApi, self).__init__(*args, **kwargs)
+        ''' Don't pull in global authentication_classes for now because
+        OAuth chokes on malformed HTTP headers (e.g. unicode in Date) '''
+        '''
         # Respect DEFAULT_AUTHENTICATION_CLASSES, but also ensure that the
         # previously hard-coded authentication classes are included first
         authentication_classes = [
@@ -48,6 +53,7 @@ class XFormListApi(viewsets.ReadOnlyModelViewSet):
             auth_class for auth_class in self.authentication_classes
                 if not auth_class in authentication_classes
         ]
+        '''
 
     def get_openrosa_headers(self):
         tz = pytz.timezone(settings.TIME_ZONE)

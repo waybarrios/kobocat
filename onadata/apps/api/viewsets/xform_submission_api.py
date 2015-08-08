@@ -136,9 +136,18 @@ Here is some example JSON, it would replace `[the JSON]` above:
                         BrowsableAPIRenderer)
     serializer_class = SubmissionSerializer
     template_name = 'submission.xml'
+    # Temporary; see comment in __init__()
+    authentication_classes = (
+        DigestAuthentication,
+        BasicAuthentication,
+        TokenAuthentication
+    ) 
 
     def __init__(self, *args, **kwargs):
         super(XFormSubmissionApi, self).__init__(*args, **kwargs)
+        ''' Don't pull in global authentication_classes for now because
+        OAuth chokes on malformed HTTP headers (e.g. unicode in Date) '''
+        '''
         # Respect DEFAULT_AUTHENTICATION_CLASSES, but also ensure that the
         # previously hard-coded authentication classes are included first
         authentication_classes = [
@@ -155,6 +164,7 @@ Here is some example JSON, it would replace `[the JSON]` above:
             auth_class for auth_class in self.authentication_classes
                 if not auth_class in authentication_classes
         ]
+        '''
 
     def create(self, request, *args, **kwargs):
         username = self.kwargs.get('username')
