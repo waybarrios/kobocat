@@ -37,16 +37,19 @@ RUN easy_install pip
 
 RUN mkdir -p /app/requirements/
 WORKDIR /app
+
 ADD requirements/base.pip /app/requirements/
 RUN pip install -r requirements/base.pip
+
+# ADD requirements/dev.pip /app/requirements/
+# RUN pip install -r requirements/dev.pip
 
 #############
 # setup npm #
 #############
 
-# https://nodesource.com/blog/nodejs-v012-iojs-and-the-nodesource-linux-repositories
-RUN apt-get install -y curl
-RUN curl -sL https://deb.nodesource.com/setup_0.12 | bash -
+RUN apt-get install -y software-properties-common
+RUN add-apt-repository -y ppa:chris-lea/node.js
 RUN apt-get install -y nodejs
 
 ################################
@@ -55,11 +58,9 @@ RUN apt-get install -y nodejs
 
 ADD . /app
 
-################
-# npm installs #
-################
+################################
+# npm installs (if testing UI) #
+################################
 
-RUN npm install -g --save-dev
-RUN npm install -g bower karma grunt-cli
-
-CMD ["/bin/bash", "run.sh"]
+# RUN npm install -g --save-dev
+# RUN npm install -g bower karma grunt-cli

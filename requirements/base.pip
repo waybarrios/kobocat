@@ -72,3 +72,4 @@ django-db-readonly==0.3.2
 pylibmc==1.3.0
 
 dj-database-url==0.3.0
+gunicorn==19.3.0

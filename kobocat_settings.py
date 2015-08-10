@@ -41,7 +41,7 @@ if TESTING_MODE:
     MONGO_DB.instances.drop()
 
 # include the kobocat-template directory
-TEMPLATE_OVERRIDE_ROOT_DIR = os.path.join(PROJECT_ROOT, '..', '..', 'kobocat-template')
+TEMPLATE_OVERRIDE_ROOT_DIR = os.path.join(PROJECT_ROOT, '..', 'kobocat-template')
 TEMPLATE_DIRS = ( os.path.join(PROJECT_ROOT, TEMPLATE_OVERRIDE_ROOT_DIR, 'templates'), ) + TEMPLATE_DIRS
 STATICFILES_DIRS += ( os.path.join(PROJECT_ROOT, TEMPLATE_OVERRIDE_ROOT_DIR, 'static'), )
 
