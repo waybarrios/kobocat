@@ -28,8 +28,7 @@ RUN apt-get install -y \
     python-lxml \
     libpq-dev \
     rabbitmq-server \
-    python-virtualenv \
-    nodejs
+    python-virtualenv
 RUN easy_install pip
 
 ################
@@ -41,10 +40,26 @@ WORKDIR /app
 ADD requirements/base.pip /app/requirements/
 RUN pip install -r requirements/base.pip
 
+#############
+# setup npm #
+#############
+
+# https://nodesource.com/blog/nodejs-v012-iojs-and-the-nodesource-linux-repositories
+RUN apt-get install -y curl
+RUN curl -sL https://deb.nodesource.com/setup_0.12 | bash -
+RUN apt-get install -y nodejs
+
 ################################
 # copy kobocat to docker image #
 ################################
 
 ADD . /app
+
+################
+# npm installs #
+################
+
+RUN npm install -g --save-dev
+RUN npm install -g bower karma grunt-cli
 
 CMD ["/bin/bash", "run.sh"]
