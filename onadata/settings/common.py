@@ -224,7 +224,6 @@ INSTALLED_APPS = (
     'onadata.apps.stats',
     'onadata.apps.sms_support',
     'onadata.libs',
-    'onadata.apps.sheets_sync',
 )
 
 OAUTH2_PROVIDER = {
@@ -398,9 +397,10 @@ MONGO_DATABASE = {
     'PASSWORD': ''
 }
 
-GOOGLE_STEP2_URI = 'http://localhost:8001/gwelcome'
-GOOGLE_CLIENT_ID = '896862299299-mv5q1t7qmljc3m4f7l74n0c1nf7pdcqn.apps.googleusercontent.com'
-GOOGLE_CLIENT_SECRET = 'rRYajhQEuQszfx8jW0nfehgT'
+GOOGLE_STEP2_URI = '{}/gwelcome'.format(
+    os.environ.get('KOBOCAT_URL', 'http://localhost:8001'))
+GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID', '896862299299-mv5q1t7qmljc3m4f7l74n0c1nf7pdcqn.apps.googleusercontent.com')
+GOOGLE_CLIENT_SECRET = os.environ.get('GOOGLE_CLIENT_SECRET', 'rRYajhQEuQszfx8jW0nfehgT')
 GOOGLE_CLIENT_EMAIL = os.environ.get('GOOGLE_CLIENT_EMAIL',
     '896862299299-c651sc4ne7t9v23bk70s7m70b37h9e3k@developer.gserviceaccount.com')
 GOOGLE_CLIENT_PRIVATE_KEY_PATH = os.environ.get('GOOGLE_CLIENT_PRIVATE_KEY_PATH',
