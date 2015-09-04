@@ -39,7 +39,7 @@ RUN mkdir -p /app/requirements/
 WORKDIR /app
 
 ADD requirements/base.pip /app/requirements/
-RUN pip install -r requirements/base.pip
+RUN pip install -r requirements/base.pip && pip install uwsgi
 
 # ADD requirements/dev.pip /app/requirements/
 # RUN pip install -r requirements/dev.pip
