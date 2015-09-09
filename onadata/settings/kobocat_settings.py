@@ -13,7 +13,22 @@ DATABASES = {
     'default': dj_database_url.config(default="postgis://postgres:@postgis:5432/template_postgis")
 }
 
-SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'mlfs33^s1l4xf6a36$0xsrgcpj_dd*sisfo6HOktYXB9y')
+if 'DJANGO_SECRET_KEY' in os.environ:
+    SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
+else:
+    # Load the secret key, or generate if there is none.
+    # See: http://stackoverflow.com/a/4674143, http://stackoverflow.com/a/16630719
+    PROJECT_PATH= os.path.abspath(os.path.dirname(__name__))
+    SECRET_KEY_FILE_PATH= os.path.join(PROJECT_PATH, 'secret_key.py')
+    if not os.path.isfile(SECRET_KEY_FILE_PATH):
+        from django.utils.crypto import get_random_string
+        chars = 'abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*(-_=+)'
+        _SECRET_KEY= get_random_string(50, chars)
+        with open(SECRET_KEY_FILE_PATH, 'w') as key_file:
+            key_file.write('SECRET_KEY= "' + _SECRET_KEY + '"')
+            
+    with open(SECRET_KEY_FILE_PATH) as secret_key_file:
+        SECRET_KEY= secret_key_file.read()
 
 TESTING_MODE = False
 if len(sys.argv) >= 2 and (sys.argv[1] == "test"):

@@ -11,4 +11,4 @@ python manage.py collectstatic --noinput
 # python manage.py createsuperuser
 
 # gunicorn onadata.apps.main.wsgi:application -w 2 -b :8000
-source default_env.source.bash && uwsgi -d uwsgi.ini
+source default_env.source.bash && uwsgi uwsgi.ini
