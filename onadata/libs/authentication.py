@@ -2,8 +2,8 @@ from django.utils.translation import ugettext as _
 from django_digest import HttpDigestAuthenticator
 from rest_framework.authentication import (
     BaseAuthentication, get_authorization_header,
-    BasicAuthentication)
-from rest_framework.exceptions import AuthenticationFailed
+    BasicAuthentication, SessionAuthentication)
+from rest_framework.exceptions import AuthenticationFailed, PermissionDenied
 
 
 class DigestAuthentication(BaseAuthentication):
