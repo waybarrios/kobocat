@@ -43,3 +43,15 @@ class HttpsOnlyBasicAuthentication(BasicAuthentication):
                 u'to use basic authentication.'
             ))
         return user_auth
+
+class SessionAuthenticationAnonymousFallback(SessionAuthentication):
+    ''' Treat a user with an active session as anoymous if CSRF validation
+    fails '''
+    def authenticate(self, *args, **kwargs):
+        try:
+            super(SessionAuthenticationAnonymousFallback, self).authenticate(
+                *args, **kwargs)
+        # Different versions of REST framework raise different exceptions for
+        # CSRF failure
+        except AuthenticationFailed, PermissionDenied:
+            return None
