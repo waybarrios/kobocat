@@ -18,11 +18,17 @@ from django.utils.translation import ugettext_lazy, ugettext as _
 from guardian.shortcuts import \
     assign_perm, \
     get_perms_for_model
+from cStringIO import StringIO
 from taggit.managers import TaggableManager
 
 from onadata.apps.logger.xform_instance_parser import XLSFormError
 from onadata.libs.models.base_model import BaseModel
 from ....koboform.pyxform_utils import convert_csv_to_xls
+
+try:
+    from f8dff.utils.xls_to_ss_structure import xls_to_dicts
+except ImportError:
+    xls_to_dicts = False
 
 
 XFORM_TITLE_LENGTH = 255
@@ -255,6 +261,23 @@ class XForm(BaseModel):
     @classmethod
     def public_forms(cls):
         return cls.objects.filter(shared=True)
+
+    def _xls_file_io(self):
+        file_path = self.xls.name
+        default_storage = get_storage_class()()
+
+        if file_path != '' and default_storage.exists(file_path):
+            if file_path.endswith('.csv'):
+                with default_storage.open(file_path) as ff:
+                    return convert_csv_to_xls(ff.read())
+            else:
+                return StringIO.StringIO(ff.read())
+
+    def to_kpi_content_schema(self):
+        if not xls_to_dicts:
+            raise ImportError('f8dff module needed')
+        content = xls_to_dicts(self._xls_file_io())
+        return json.dumps(content, indent=4)
 
     def to_xlsform(self):
         '''Generate an XLS format XLSForm copy of this form.'''
