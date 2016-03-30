@@ -1,8 +1,12 @@
 import json
 import os
+import uuid
+
 from datetime import datetime
 from tempfile import NamedTemporaryFile
 from time import strftime, strptime
+
+from path import tempdir
 
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -19,6 +23,8 @@ from django.shortcuts import redirect
 from django.shortcuts import render
 from django.utils.translation import ugettext as _
 from django.views.decorators.http import require_POST
+
+from f8dff.models.formpack.pack import FormPack
 
 from onadata.apps.main.models import UserProfile, MetaData, TokenStorageModel
 from onadata.apps.logger.models import XForm, Attachment
@@ -810,3 +816,67 @@ def stats_tables(request, username, id_string):
         return HttpResponseForbidden(_(u'Not shared.'))
 
     return render(request, 'stats_tables.html', {'xform': xform})
+
+
+def f8fdff_csv_export(request, username, id_string):
+
+    def get_instances_for_user_and_form(user, form_id):
+        userform_id = '{}_{}'.format(user, form_id)
+        query = {'_userform_id': userform_id}
+        for item in settings.MONGO_DB.instances.find(query):
+            yield item
+
+    data = open('/home/ubuntu/src/kobocat/b_farleb_baseline.json').read()
+
+    schema = {
+        "id_string": "b_farleb_baseline",
+        "version": 'v1',
+        "content": json.loads(data.decode('utf8'))
+    }
+
+    data = [("v1", get_instances_for_user_and_form(username, id_string))]
+    export = FormPack([schema], id_string).export(versions='v1')
+
+    response = HttpResponse(content_type='text/csv')
+
+    for line in export.to_csv(data):
+        response.write(line + '\n')
+
+    return response
+
+
+def f8fdff_xlsx_export(request, username, id_string):
+
+    def get_instances_for_user_and_form(user, form_id):
+        userform_id = '{}_{}'.format(user, form_id)
+        query = {'_userform_id': userform_id}
+        for item in settings.MONGO_DB.instances.find(query):
+            yield item
+
+    #    data = open('/home/ubuntu/src/kobocat/b_farleb_baseline.json').read()
+    #    content = json.loads(data.decode('utf8'))
+    xform = XForm.objects.get(id_string=id_string)
+    _content = xform.to_kpi_content_schema()
+    _content['version'] = 'v1'
+    schema = {
+        "title": xform.title,
+        "id_string": id_string,
+        "versions": [_content],
+    }
+
+    data = [("v1", get_instances_for_user_and_form(username, id_string))]
+
+    export = FormPack(**schema).export(versions='v1')
+
+    with tempdir() as d:
+        tempfile = d / str(uuid.uuid4())
+        export.to_xlsx(tempfile, data)
+        xls = tempfile.bytes()
+
+    response = HttpResponse(xls, content_type=u'application/vnd.ms-excel')
+    disposition = u'attachment; filename=%s.xlsx' % id_string
+    response['Content-Disposition'] = disposition
+
+
+    return response
+
