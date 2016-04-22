@@ -31,6 +31,8 @@ RUN rm -rf /etc/service/wsgi && \
     cp "${KOBOCAT_SRC_DIR}/docker/run_uwsgi.bash" /etc/service/uwsgi/run && \
     mkdir -p /etc/service/celery && \
     cp "${KOBOCAT_SRC_DIR}/docker/run_celery.bash" /etc/service/celery/run && \
+    mkdir -p /etc/service/celery_attachment_zip_export_worker && \
+    cp "${KOBOCAT_SRC_DIR}/docker/run_celery_attachment_zip_export_worker.bash" /etc/service/celery_attachment_zip_export_worker/run && \
     cp "${KOBOCAT_SRC_DIR}/docker/init.bash" /etc/my_init.d/10_init_kobocat.bash && \
     cp "${KOBOCAT_SRC_DIR}/docker/sync_static.sh" /etc/my_init.d/11_sync_static.bash && \
     mkdir -p "${KOBOCAT_SRC_DIR}/emails/" && \
