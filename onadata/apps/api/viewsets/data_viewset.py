@@ -382,6 +382,10 @@ Delete a specific submission in a form
 
         if pk is not None and dataid is not None:
             try:
+                int(pk)
+            except ValueError:
+                raise ParseError(_(u"Invalid pk %(pk)s" % {'pk': pk}))
+            try:
                 int(dataid)
             except ValueError:
                 raise ParseError(_(u"Invalid dataid %(dataid)s"
