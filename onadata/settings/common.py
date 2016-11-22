@@ -230,6 +230,7 @@ INSTALLED_APPS = (
     'onadata.apps.survey_report',
     'onadata.apps.export',
     'pure_pagination',
+    'django_extensions',
 )
 
 OAUTH2_PROVIDER = {
