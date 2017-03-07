@@ -25,8 +25,8 @@ RUN apt-get update && \
 
 COPY ./requirements/ ${KOBOCAT_TMP_DIR}/base_requirements/
 RUN mkdir -p ${PIP_EDITABLE_PACKAGES_DIR} && \
-    pip install --src ${PIP_EDITABLE_PACKAGES_DIR}/ -r ${KOBOCAT_TMP_DIR}/base_requirements/base.pip && \
-    pip install --src ${PIP_EDITABLE_PACKAGES_DIR}/ -r ${KOBOCAT_TMP_DIR}/base_requirements/s3.pip && \
+    pip install --no-cache-dir --src ${PIP_EDITABLE_PACKAGES_DIR}/ -r ${KOBOCAT_TMP_DIR}/base_requirements/base.pip && \
+    pip install --no-cache-dir --src ${PIP_EDITABLE_PACKAGES_DIR}/ -r ${KOBOCAT_TMP_DIR}/base_requirements/s3.pip && \
     rm -rf ~/.cache/pip
 
 
