@@ -33,7 +33,7 @@ from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
 from django_digest import HttpDigestAuthenticator
 from pyxform import Survey
-from pyxform.spss import survey_to_spss_label_zip
+#from pyxform.spss import survey_to_spss_label_zip
 from wsgiref.util import FileWrapper
 
 from onadata.apps.main.models import UserProfile, MetaData
@@ -465,6 +465,7 @@ def download_spss_labels(request, username, form_id_string):
 
     survey= Survey.from_xls(filelike_obj=xlsform_io)
     zip_filename= '{}_spss_labels.zip'.format(xform.id_string)
+    raise NotImplementedError('Requires KoBo fork of pyxform')
     zip_io= survey_to_spss_label_zip(survey, xform.id_string)
 
     response = StreamingHttpResponse(FileWrapper(zip_io),
